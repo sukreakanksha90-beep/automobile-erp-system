@@ -5,6 +5,9 @@ import Masters from "./pages/Masters";
 import TransactionMaster from "./components/TransactionMaster";
 import BillsList from "./pages/BillsList";
 import BillView from "./pages/BillView";
+import EditBill from "./pages/EditBill";
+
+
 
 function ProtectedRoute({ children }) {
   const isLoggedIn = localStorage.getItem("loggedIn");
@@ -37,8 +40,10 @@ function App() {
 
         <Route path="/transactions" element={<TransactionMaster />} />
         
-        <Route path="/bills" element={<BillsList />} />
+<Route path="/bills" element={<BillsList />} />
 <Route path="/bill/:id" element={<BillView />} />
+<Route path="/edit-bill/:id" element={<TransactionMaster />} />
+
 
         <Route path="*" element={<Navigate to="/login" />} />
       </Routes>

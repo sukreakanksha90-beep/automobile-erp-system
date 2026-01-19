@@ -38,18 +38,23 @@ export default function BillsList() {
               <td>{bill.customer?.name || "-"}</td>
 
               <td>{bill.grandTotal}</td>
-              <td>
-                {/* <button
-                  onClick={() =>
-                    window.open(`/bill/${bill._id}`, "_blank")
-                  }
-                >
-                  OPEN
-                </button> */
-                <button className="gene" onClick={() => navigate(`/bill/${bill._id}`)}>OPEN</button>
+              
+<td>
+  <button className="gene" onClick={() => navigate(`/bill/${bill._id}`)}>
+    OPEN
+  </button>
 
-                }
-              </td>
+  <button
+    className="gene"
+    style={{ marginLeft: "10px" }}
+    onClick={() => navigate(`/edit-bill/${bill._id}`)}
+  >
+    EDIT
+  </button>
+</td>
+
+
+
             </tr>
           ))}
         </tbody>

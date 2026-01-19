@@ -83,17 +83,22 @@ function CustomerMaster() {
   };
 
   // 🔹 SEARCH
-  const handleSearch = async () => {
-    if (!search) {
-      setFilteredCustomers(customers);
-    } else {
-      const result = customers.filter(c =>
-        c.id?.toLowerCase().includes(search.toLowerCase())
-      );
-      setFilteredCustomers(result);
-    }
-    setShowTable(true);
-  };
+const handleSearch = () => {
+  if (!search) {
+    setFilteredCustomers(customers);
+  } else {
+    const value = search.toLowerCase();
+
+    const result = customers.filter(c =>
+      c.id?.toLowerCase().includes(value) ||
+      c.name?.toLowerCase().includes(value) ||
+      c.contact?.toLowerCase().includes(value)   // phone number
+    );
+
+    setFilteredCustomers(result);
+  }
+  setShowTable(true);
+};
 
   // 🔹 EDIT
   const editCustomer = c => {
@@ -112,11 +117,12 @@ function CustomerMaster() {
 
   return (
     <div className="tab">
-      <input
-        placeholder="Search by Customer ID"
-        value={search}
-        onChange={e => setSearch(e.target.value)}
-      />
+<input
+  placeholder="Search by ID, Name or Phone"
+  value={search}
+  onChange={e => setSearch(e.target.value)}
+/>
+
       <button type="button" onClick={handleSearch}>Search</button>
       <button
           type="button"

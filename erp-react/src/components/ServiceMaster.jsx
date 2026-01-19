@@ -73,11 +73,24 @@ function ServiceMaster() {
   };
 
   // 🔹 Search by ID
-  const searchService = async () => {
-    const res = await fetch(API);
-    const data = await res.json();
-    setServices(data.filter(s => s.id === search));
-  };
+const searchService = async () => {
+  const res = await fetch(API);
+  const data = await res.json();
+
+  if (!search) {
+    setServices(data);
+  } else {
+    const value = search.toLowerCase();
+
+    const result = data.filter(s =>
+      s.id?.toLowerCase().includes(value) ||
+      s.name?.toLowerCase().includes(value)
+    );
+
+    setServices(result);
+  }
+};
+
 
   // 🔹 Delete service
   const deleteService = async (id) => {
@@ -89,10 +102,11 @@ function ServiceMaster() {
     <div className="tab">
       {/* 🔍 Search */}
       <input
-        placeholder="Search by Service ID"
-        value={search}
-        onChange={e => setSearch(e.target.value)}
-      />
+  placeholder="Search by Service ID or Name"
+  value={search}
+  onChange={e => setSearch(e.target.value)}
+/>
+
       <button onClick={searchService}>Search</button>
       <button onClick={showAllServices}>Show All</button>
 

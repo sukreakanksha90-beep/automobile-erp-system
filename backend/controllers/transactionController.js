@@ -7,6 +7,7 @@ exports.createTransaction = async (req, res) => {
       invoiceDate: req.body.invoiceDate,
       customer: req.body.customer || {},
       services: Array.isArray(req.body.services) ? req.body.services : [],
+       products: Array.isArray(req.body.products) ? req.body.products : [],
       subtotal: req.body.subtotal || 0,
       cgstTotal: req.body.cgstTotal || 0,
       sgstTotal: req.body.sgstTotal || 0,
@@ -20,6 +21,7 @@ exports.createTransaction = async (req, res) => {
       // 🔥 ADD THIS LINE
       createdBy: req.user.id
     });
+    products: Array.isArray(req.body.products) ? req.body.products : [],
 
     await transaction.save();
     await InvoiceCounter.findOneAndUpdate(
@@ -96,6 +98,21 @@ exports.getMyTransactions = async (req, res) => {
       message: "Failed to fetch billing history", 
       error: err.message 
     });
+  }
+};
+
+exports.updateTransaction = async (req, res) => {
+  try {
+    const updatedBill = await Transaction.findByIdAndUpdate(
+      req.params.id,
+      req.body,
+      { new: true }
+    );
+
+    res.json(updatedBill);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: "Failed to update bill" });
   }
 };
 

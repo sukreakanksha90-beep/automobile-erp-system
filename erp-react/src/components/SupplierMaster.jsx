@@ -81,17 +81,23 @@ function SupplierMaster() {
   };
 
   // 🔹 SEARCH
-  const searchSupplier = () => {
-    if (!search) {
-      setFilteredSuppliers(suppliers);
-    } else {
-      const result = suppliers.filter(s =>
-        s.id?.toLowerCase().includes(search.toLowerCase())
-      );
-      setFilteredSuppliers(result);
-    }
-    setShowTable(true);
-  };
+const searchSupplier = () => {
+  if (!search) {
+    setFilteredSuppliers(suppliers);
+  } else {
+    const value = search.toLowerCase();
+
+    const result = suppliers.filter(s =>
+      s.id?.toLowerCase().includes(value) ||
+      s.name?.toLowerCase().includes(value)
+    );
+
+    setFilteredSuppliers(result);
+  }
+
+  setShowTable(true);
+};
+
 
   // 🔹 EDIT
   const editSupplier = s => {
@@ -111,10 +117,10 @@ function SupplierMaster() {
   return (
     <div className="tab">
       <input
-        placeholder="Search by Supplier ID"
-        value={search}
-        onChange={e => setSearch(e.target.value)}
-      />
+  placeholder="Search by Supplier ID or Name"
+  value={search}
+  onChange={e => setSearch(e.target.value)}
+/>
       <button type="button" onClick={searchSupplier}>Search</button>
       
        <button

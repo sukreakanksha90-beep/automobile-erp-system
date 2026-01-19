@@ -1,11 +1,12 @@
 import { useState, useEffect } from "react";
 
 const SERVICE_API = "http://localhost:5000/api/services";
+const PRODUCT_API = "http://localhost:5000/api/products";
 const CUSTOMER_API = "http://localhost:5000/api/customers";
 const TRANSACTION_API = "http://localhost:5000/api/transactions";
 
 
-function TransactionMaster() {
+function TransactionMaster({ editMode = false, billId = null }) {
   const [serviceList, setServiceList] = useState([]);
 
 
@@ -25,6 +26,82 @@ useEffect(() => {
 }, []);
 
 
+
+//for product  
+const [productList, setProductList] = useState([]);
+
+const [products, setProducts] = useState([
+  {
+    product: "",
+    qty: 1,
+    rate: 0,
+    gst: 0,
+    amount: 0,
+    gstAmount: 0,
+    cgstAmount: 0,
+    sgstAmount: 0
+  }
+]);
+
+useEffect(() => {
+  fetch(PRODUCT_API)
+    .then(res => res.json())
+    .then(data => setProductList(data));
+}, []);
+
+
+const addProductRow = () => {
+  setProducts([
+    ...products,
+    {
+      product: "",
+      qty: 1,
+      rate: 0,
+      gst: 0,
+      amount: 0,
+      gstAmount: 0,
+      cgstAmount: 0,
+      sgstAmount: 0
+    }
+  ]);
+};
+
+const removeProductRow = index => {
+  setProducts(products.filter((_, i) => i !== index));
+};
+
+const updateProductRow = (index, field, value) => {
+  const updated = [...products];
+  updated[index][field] = value;
+
+  const qty = Number(updated[index].qty);
+  const rate = Number(updated[index].rate);
+  const gst = Number(updated[index].gst);
+
+  const amount = qty * rate;
+  const totalGstAmount = (amount * gst) / 100;
+  const cgstAmount = totalGstAmount / 2;
+  const sgstAmount = totalGstAmount / 2;
+
+  updated[index].amount = amount;
+  updated[index].gstAmount = totalGstAmount;
+  updated[index].cgstAmount = cgstAmount;
+  updated[index].sgstAmount = sgstAmount;
+
+  setProducts(updated);
+};
+
+
+const handleProductSelect = (index, productId) => {
+  const product = productList.find(p => p._id === productId);
+  if (!product) return;
+
+  updateProductRow(index, "product", product.name);
+  updateProductRow(index, "rate", Number(product.sale));
+  updateProductRow(index, "gst", Number(product.tax.replace("%", "")));
+};
+
+//service data
   const [services, setServices] = useState([
   {
   service: "",
@@ -200,6 +277,34 @@ updated[index].sgstAmount = sgstAmount;
   };
 
   // 🔹 AUTO TOTALS
+//product
+useEffect(() => {
+  let subtotal = 0;
+  let cgstTotal = 0;
+  let sgstTotal = 0;
+
+  services.forEach(row => {
+    subtotal += row.amount;
+    cgstTotal += row.cgstAmount || 0;
+    sgstTotal += row.sgstAmount || 0;
+  });
+
+  products.forEach(row => {
+    subtotal += row.amount;
+    cgstTotal += row.cgstAmount || 0;
+    sgstTotal += row.sgstAmount || 0;
+  });
+
+  setSummary({
+    subtotal,
+    cgstTotal,
+    sgstTotal,
+    grandTotal: subtotal + cgstTotal + sgstTotal - discount
+  });
+}, [services, products, discount]);
+
+
+  // service 
   useEffect(() => {
  let subtotal = 0;
 let cgstTotal = 0;
@@ -230,49 +335,98 @@ setSummary({
   }
 
     const payload = {
-      invoiceNo,
-      invoiceDate,
-      customer: {
-        id: selectedCustomer._id,
-        name: selectedCustomer.name,
-        vehicleNo: selectedCustomer.vehicleNo,
-        contact: selectedCustomer.contact,
-        state: selectedCustomer.state
-      },
-      services: services.filter(s => s.service),
-      subtotal: summary.subtotal,
-      cgstTotal: summary.cgstTotal,
-      sgstTotal: summary.sgstTotal,
-      discount,
-      grandTotal: summary.grandTotal,
-      payments: {
+  invoiceNo,
+  invoiceDate,
+  customer: {
+    id: selectedCustomer._id,
+    name: selectedCustomer.name,
+    vehicleNo: selectedCustomer.vehicleNo,
+    contact: selectedCustomer.contact,
+    state: selectedCustomer.state
+  },
+
+  services: services.filter(s => s.service),
+  products: products.filter(p => p.product),   // ✅ NEW
+
+  subtotal: summary.subtotal,
+  cgstTotal: summary.cgstTotal,
+  sgstTotal: summary.sgstTotal,
+  discount,
+  grandTotal: summary.grandTotal,
+  payments: {
     cash: paymentModes.cash ? payments.cash : 0,
     upi: paymentModes.upi ? payments.upi : 0,
     credit: paymentModes.credit ? payments.credit : 0
   },
-      totalPaid,
-      balanceAmount,
-      paymentStatus: balanceAmount === 0 ? "Paid" : "Pending"
-    };
+  totalPaid,
+  balanceAmount,
+  paymentStatus: balanceAmount === 0 ? "Paid" : "Pending"
+};
 
 
 
-  const res = await fetch("http://localhost:5000/api/transactions", {
-  method: "POST",
-   headers: {
+
+  const url = editMode
+  ? `${TRANSACTION_API}/${billId}`
+  : TRANSACTION_API;
+
+const method = editMode ? "PUT" : "POST";
+
+const res = await fetch(url, {
+  method,
+  headers: {
     "Content-Type": "application/json",
     Authorization: `Bearer ${localStorage.getItem("token")}`
   },
   body: JSON.stringify(payload)
+});
 
-  });
 
   if (res.ok) {
     alert("Transaction saved successfully ✅");
   } else {
     alert("Failed to save transaction ❌");
   }
+
+
 };
+
+//Edit bill
+useEffect(() => {
+  if (!editMode || !billId) return;
+
+  fetch(`${TRANSACTION_API}/${billId}`)
+    .then(res => res.json())
+    .then(data => {
+      // Fill invoice fields
+      setInvoiceNo(data.invoiceNo);
+      setInvoiceDate(data.invoiceDate.split("T")[0]);
+
+      // Set customer
+      setSelectedCustomer(data.customer);
+
+      // Load services & products from DB
+      setServices(data.services);
+      setProducts(data.products);
+
+      // Load totals/discount
+      setDiscount(data.discount || 0);
+
+      // Load payment
+      setPayments({
+        cash: data.payments.cash,
+        upi: data.payments.upi,
+        credit: data.payments.credit,
+      });
+
+      setPaymentModes({
+        cash: data.payments.cash > 0,
+        upi: data.payments.upi > 0,
+        credit: data.payments.credit > 0
+      });
+    })
+    .catch(err => console.error(err));
+}, [editMode, billId]);
 
 
   return (
@@ -372,6 +526,61 @@ setSummary({
 
         <button onClick={addRow}>➕ Add Service</button>
       </div>
+
+
+    {/* product ui */ }
+     {/* Products */}
+<div className="section">
+  <div className="trans-section-title">Product Details</div>
+
+  <table className="service-table">
+    <thead>
+      <tr>
+        <th>Product</th>
+        <th>Qty</th>
+        <th>Rate</th>
+        <th>GST %</th>
+        <th>Amount</th>
+        <th>Action</th>
+      </tr>
+    </thead>
+
+    <tbody>
+      {products.map((row, i) => (
+        <tr key={i}>
+          <td>
+            <select onChange={e => handleProductSelect(i, e.target.value)}>
+              <option value="">Select Product</option>
+              {productList.map(p => (
+                <option key={p._id} value={p._id}>{p.name}</option>
+              ))}
+            </select>
+          </td>
+
+          <td>
+            <input
+              type="number"
+              value={row.qty}
+              min="1"
+              onChange={e => updateProductRow(i, "qty", e.target.value)}
+            />
+          </td>
+
+          <td><input value={row.rate} disabled /></td>
+          <td><input value={row.gst} disabled /></td>
+          <td><input value={row.amount.toFixed(2)} disabled /></td>
+
+          <td>
+            <button onClick={() => removeProductRow(i)}>❌</button>
+          </td>
+        </tr>
+      ))}
+    </tbody>
+  </table>
+
+  <button onClick={addProductRow}>➕ Add Product</button>
+</div>
+
 
       {/* Summary */}
       <div className="section">

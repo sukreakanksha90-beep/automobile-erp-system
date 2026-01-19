@@ -1,22 +1,21 @@
 const express = require("express");
 const router = express.Router();
-const controller = require("../controllers/transactionController");
 
-const { verifyToken } = require("../controllers/authController");
-const {
-  createTransaction,
-  getAllTransactions,
-  getTransactionById,
-  getMyTransactions
-} = require("../controllers/transactionController");
+const transactionController = require("../controllers/transactionController");  // ✅ ADD THIS
 
-/* EXISTING ROUTES (KEEP AS THEY ARE) */
-router.post("/", verifyToken, createTransaction);
+// GET all bills
+router.get("/", transactionController.getAllTransactions);
 
-router.get("/", getAllTransactions);
-router.get("/:id", getTransactionById);
+// GET single bill
+router.get("/:id", transactionController.getTransactionById);
 
-/* ✅ NEW PROFILE ROUTE (ADD ONLY THIS) */
-router.get("/my", verifyToken, getMyTransactions);
+// CREATE bill
+router.post("/", transactionController.createTransaction);
+
+// UPDATE bill
+router.put("/:id", transactionController.updateTransaction);
+
+// DELETE bill (optional)
+//router.delete("/:id", transactionController.deleteTransaction);
 
 module.exports = router;
