@@ -21,10 +21,19 @@ exports.create = async (req, res) => {
       nextNumber = parseInt(lastProduct.pid.split("-")[1]) + 1;
     }
 
-    const newProduct = {
-      ...req.body,
-      pid: `PRD-${nextNumber}`
-    };
+    const gstValue = req.body.tax
+  ? Number(req.body.tax.replace("%", ""))
+  : 0;
+
+const newProduct = {
+  ...req.body,
+  gst: gstValue,                   // ✅ numeric GST
+  purchase: Number(req.body.purchase),
+  sale: Number(req.body.sale),
+  mrp: Number(req.body.mrp),
+  pid: `PRD-${nextNumber}`
+};
+
 
     await Product.create(newProduct);
     res.json({ message: "Product saved successfully" });
@@ -37,7 +46,18 @@ exports.create = async (req, res) => {
 // UPDATE
 exports.update = async (req, res) => {
   try {
-    await Product.findByIdAndUpdate(req.params.id, req.body);
+    const gstValue = req.body.tax
+  ? Number(req.body.tax.replace("%", ""))
+  : 0;
+
+await Product.findByIdAndUpdate(req.params.id, {
+  ...req.body,
+  gst: gstValue,
+  purchase: Number(req.body.purchase),
+  sale: Number(req.body.sale),
+  mrp: Number(req.body.mrp)
+});
+
     res.json({ message: "Product updated successfully" });
   } catch (err) {
     res.status(500).json({ message: err.message });

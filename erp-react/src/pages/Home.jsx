@@ -34,10 +34,15 @@ export default function Home() {
 
             <button
               className="home-btn secondary"
-              onClick={() => navigate("/transactions")}
+              onClick={() => navigate("/transaction")}
             >
               Transactions
             </button>
+             
+             
+              <button className="home-btn secondary" onClick={() => navigate("/appointments")}>
+                Book Appointment
+              </button>
           </div>
         </div>
       </section>

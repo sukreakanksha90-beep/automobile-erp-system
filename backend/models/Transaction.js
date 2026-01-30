@@ -1,7 +1,8 @@
 const mongoose = require("mongoose");
 
-const ProductSchema = new mongoose.Schema({
-  product: String,
+const ServiceSchema = new mongoose.Schema({
+  serviceId: String,
+  service: String,
   qty: Number,
   rate: Number,
   gst: Number,
@@ -10,8 +11,9 @@ const ProductSchema = new mongoose.Schema({
   sgstAmount: Number
 });
 
-const ServiceSchema = new mongoose.Schema({
-  service: String,
+const ProductSchema = new mongoose.Schema({
+  productId: String,
+  product: String,
   qty: Number,
   rate: Number,
   gst: Number,
@@ -22,6 +24,14 @@ const ServiceSchema = new mongoose.Schema({
 
 const TransactionSchema = new mongoose.Schema(
   {
+    /* 🔗 LINK TO JOB CARD */
+    jobCardId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "JobCard",
+      required: true,
+      unique: true // ONE job card → ONE bill
+    },
+
     invoiceNo: String,
     invoiceDate: Date,
 
@@ -33,8 +43,8 @@ const TransactionSchema = new mongoose.Schema(
       state: String
     },
 
-    services: [ServiceSchema],   // existing
-    products: [ProductSchema],   // new
+    services: [ServiceSchema],
+    products: [ProductSchema],
 
     subtotal: Number,
     cgstTotal: Number,
@@ -50,9 +60,14 @@ const TransactionSchema = new mongoose.Schema(
 
     totalPaid: { type: Number, default: 0 },
     balanceAmount: { type: Number, default: 0 },
+
     paymentStatus: String,
 
-    createdBy: { type: mongoose.Schema.Types.ObjectId, ref: "User", required: true }
+    createdBy: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User",
+      required: true
+    }
   },
   { timestamps: true }
 );

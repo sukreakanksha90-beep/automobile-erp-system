@@ -1,21 +1,20 @@
 const express = require("express");
 const router = express.Router();
+const controller = require("../controllers/transactionController");
+const { verifyToken } = require("../controllers/authController");
 
-const transactionController = require("../controllers/transactionController");  // ✅ ADD THIS
+router.post("/", verifyToken, controller.createTransaction);
+router.get("/", controller.getAllTransactions);
+router.get("/:id", controller.getTransactionById);
+router.get("/my", verifyToken, controller.getMyTransactions);
+router.put("/:id", verifyToken, controller.updateTransaction);
+router.delete("/:id", verifyToken, controller.deleteTransaction);
 
-// GET all bills
-router.get("/", transactionController.getAllTransactions);
-
-// GET single bill
-router.get("/:id", transactionController.getTransactionById);
-
-// CREATE bill
-router.post("/", transactionController.createTransaction);
-
-// UPDATE bill
-router.put("/:id", transactionController.updateTransaction);
-
-// DELETE bill (optional)
-//router.delete("/:id", transactionController.deleteTransaction);
+/* 🔥 CREATE BILL FROM JOB CARD */
+router.post(
+  "/from-jobcard/:jobCardId",
+  verifyToken,
+  controller.createTransactionFromJobCard
+);
 
 module.exports = router;

@@ -35,10 +35,17 @@ exports.create = async (req, res) => {
       nextNum = parseInt(lastService.id.split("-")[1]) + 1;
     }
 
-    await Service.create({
-      ...req.body,
-      id: `SER-${nextNum}`
-    });
+    const gstValue = req.body.gstCategory
+  ? Number(req.body.gstCategory.replace("%", ""))
+  : 0;
+
+await Service.create({
+  ...req.body,
+  gst: gstValue,          // ✅ numeric GST
+  cost: Number(req.body.cost),
+  id: `SER-${nextNum}`
+});
+
 
     res.json({ message: "Service saved successfully" });
   } catch (err) {
@@ -48,7 +55,16 @@ exports.create = async (req, res) => {
 
 exports.update = async (req, res) => {
   try {
-    await Service.findByIdAndUpdate(req.params.id, req.body);
+    const gstValue = req.body.gstCategory
+  ? Number(req.body.gstCategory.replace("%", ""))
+  : 0;
+
+await Service.findByIdAndUpdate(req.params.id, {
+  ...req.body,
+  gst: gstValue,
+  cost: Number(req.body.cost)
+});
+
     res.json({ message: "Service updated successfully" });
   } catch (err) {
     res.status(500).json({ message: err.message });

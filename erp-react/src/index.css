@@ -4,8 +4,30 @@ body {
   background-color: #0C67A0;
 }
 
+.tab {
+  color: #000000 !important;
+}
+
 
 code {
   font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New',
     monospace;
 }
+/* Force dropdown visibility */
+select {
+  background-color: #ffffff !important;
+  color: #000000 !important;
+  border: 1px solid #ccc;
+}
+
+select option {
+  background-color: #ffffff !important;
+  color: #000000 !important;
+}
+
+/* Fix input & textarea also */
+input, textarea {
+  background-color: #ffffff !important;
+  color: #000000 !important;
+}
+

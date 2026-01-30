@@ -131,7 +131,20 @@ th, td {
 
 /* Back Button */
 .back-btn {
-    margin-bottom: 10px;
+  padding: 10px 14px;
+  border-radius: 2px;
+  border: none;
+  background: #1a5e90;
+  color: white;
+  cursor: pointer;
+  transition: 0.3s;
+  border: 2px solid #ced8e0;
+  margin-left:  140px;
+
+}
+.back-btn:hover {
+    background: #162F6A;
+    transform: scale(1.05);
 }
 /* Make select look like input (ERP style) */
 .form-group select {
@@ -196,7 +209,6 @@ th, td {
   border-bottom: 2px solid #e1e8f5; /* subtle divider */
   letter-spacing: 0.3px;
 }
-
 
 .grid-2 {
   display: grid;

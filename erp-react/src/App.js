@@ -1,3 +1,4 @@
+
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import Login from "./pages/Login";
 import Home from "./pages/Home";
@@ -5,8 +6,10 @@ import Masters from "./pages/Masters";
 import TransactionMaster from "./components/TransactionMaster";
 import BillsList from "./pages/BillsList";
 import BillView from "./pages/BillView";
-import EditBill from "./pages/EditBill";
-
+import Appointment from "./pages/Appointment";
+// src/App.js (add imports & routes)
+import JobCardCreate from "./pages/JobCardCreate";
+import JobCardList from "./pages/JobCardList";
 
 
 function ProtectedRoute({ children }) {
@@ -38,14 +41,19 @@ function App() {
           }
         />
 
-        <Route path="/transactions" element={<TransactionMaster />} />
+        <Route path="/transaction" element={<TransactionMaster />} />
         
-<Route path="/bills" element={<BillsList />} />
-<Route path="/bill/:id" element={<BillView />} />
-<Route path="/edit-bill/:id" element={<TransactionMaster />} />
-
-
+        <Route path="/bills" element={<BillsList />} />
+         <Route path="/bill/:id" element={<BillView />} />
         <Route path="*" element={<Navigate to="/login" />} />
+       <Route path="/appointments" element={<ProtectedRoute><Appointment /></ProtectedRoute>} />
+       
+<Route path="/jobcard/create/:appointmentId" element={<JobCardCreate />} />
+<Route path="/jobcardlist" element={<JobCardList />} />
+
+
+
+
       </Routes>
     </BrowserRouter>
   );

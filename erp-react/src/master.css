@@ -3,8 +3,15 @@ body {
   margin: 0;
   padding: 0;
 
-  /* neutral base */
-  background:#16567b;
+  /*  master background color neutral base */
+  background: linear-gradient(
+  to right,
+  #01080d 0%,
+  #062c44 40%,
+  #013453 75%,
+  #062c44 87%,
+  #041826 100%
+);
 
   /* ❌ remove centering */
   display: block;
@@ -194,5 +201,82 @@ h1 {
 
   .tab form button {
     grid-column: span 1;
+  }
+}
+.search-box {
+  margin-bottom: 12px;
+}
+
+.search-box input {
+  width: 300px;
+  padding: 8px 10px;
+  border-radius: 6px;
+  border: 1px solid #ccc;
+}
+
+.form-group {
+  display: flex;
+  flex-direction: column;
+}
+
+.form-group label {
+  font-weight: 600;
+  margin-bottom: 4px;
+  font-size: 14px;
+}
+
+/* =======================
+   PRINT SETTINGS (A4)
+======================= */
+
+@media print {
+  /* Page size */
+  @page {
+    size: A4;
+    margin: 10mm;
+  }
+
+  /* Hide buttons & navigation */
+  button,
+  .back-btn {
+    display: none !important;
+  }
+
+  /* Prevent page breaking */
+  body {
+    margin: 0;
+    padding: 0;
+  }
+
+  .invoice-wrapper {
+    width: 100%;
+    margin: 0;
+    padding: 0;
+  }
+
+  .invoice-paper {
+    page-break-inside: avoid;
+    break-inside: avoid;
+    overflow: hidden;
+  }
+
+  /* Prevent table rows from splitting */
+  table {
+    page-break-inside: avoid;
+    break-inside: avoid;
+  }
+
+  tr {
+    page-break-inside: avoid;
+    break-inside: avoid;
+  }
+
+  /* Slightly compact text for print */
+  h2, h3 {
+    margin: 6px 0;
+  }
+
+  p {
+    margin: 4px 0;
   }
 }
