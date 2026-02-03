@@ -1,5 +1,6 @@
 
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+import Landing from "./pages/Landing";
 import Login from "./pages/Login";
 import Home from "./pages/Home";
 import Masters from "./pages/Masters";
@@ -21,7 +22,11 @@ function App() {
   return (
     <BrowserRouter>
       <Routes>
+        {/* 🌐 PUBLIC ROUTES (SEO) */}
+        <Route path="/" element={<Landing />} />
         <Route path="/login" element={<Login />} />
+
+        {/* 🔒 PROTECTED ROUTES */}
 
         <Route
           path="/home"
@@ -48,15 +53,10 @@ function App() {
         <Route path="*" element={<Navigate to="/login" />} />
        <Route path="/appointments" element={<ProtectedRoute><Appointment /></ProtectedRoute>} />
        
-<Route path="/jobcard/create/:appointmentId" element={<JobCardCreate />} />
-<Route path="/jobcardlist" element={<JobCardList />} />
-
-
-
-
+        <Route path="/jobcard/create/:appointmentId" element={<JobCardCreate />} />
+        <Route path="/jobcardlist" element={<JobCardList />} />
       </Routes>
     </BrowserRouter>
   );
 }
-
 export default App;
