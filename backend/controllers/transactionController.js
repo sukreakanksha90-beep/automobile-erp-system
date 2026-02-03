@@ -1,3 +1,4 @@
+
 const Transaction = require("../models/Transaction");
 const InvoiceCounter = require("../models/InvoiceCounter");
 const JobCard = require("../models/JobCard");
@@ -6,7 +7,6 @@ const JobCard = require("../models/JobCard");
 exports.createTransaction = async (req, res) => {
   try {
     const transaction = new Transaction({
-      jobCardId: req.body.jobCardId,
       invoiceNo: req.body.invoiceNo,
       invoiceDate: req.body.invoiceDate,
 
@@ -37,13 +37,13 @@ exports.createTransaction = async (req, res) => {
         sgstAmount: (p.amount * p.gst) / 200
       })),
 
-      subtotal: req.body.subTotal,
+      subtotal: req.body.subTotal || req.body.subtotal,
       cgstTotal: req.body.gstTotal / 2,
       sgstTotal: req.body.gstTotal / 2,
       discount: req.body.discount,
       grandTotal: req.body.grandTotal,
 
-      payments: req.body.payment,
+      payments: req.body.payment || req.body.payments,
       totalPaid: req.body.totalPaid,
       balanceAmount: req.body.balance,
       paymentStatus: req.body.balance > 0 ? "Pending" : "Paid",
@@ -54,9 +54,12 @@ exports.createTransaction = async (req, res) => {
     await transaction.save();
     res.status(201).json(transaction);
   } catch (err) {
-    console.error(err);
-    res.status(500).json({ message: "Transaction failed" });
-  }
+  console.error("TRANSACTION ERROR 👉", err);
+  res.status(500).json({ 
+    message: err.message || "Transaction failed" 
+  });
+}
+
 };
 
 
@@ -109,7 +112,7 @@ const sgstTotal =
   services.reduce((a, s) => a + s.sgstAmount, 0) +
   products.reduce((a, p) => a + p.sgstAmount, 0);
 
-const discount = Number(req.body.discount || 0);
+const discount = Number(req.body.discount ?? 0);
 
 const grandTotal = subtotal + cgstTotal + sgstTotal - discount;
 
@@ -165,9 +168,12 @@ paymentStatus: balanceAmount > 0 ? "Pending" : "Paid",
 
     res.status(201).json(transaction);
   } catch (err) {
-    console.error(err);
-    res.status(500).json({ message: "Billing failed" });
-  }
+  console.error("TRANSACTION ERROR 👉", err);
+  res.status(500).json({ 
+    message: err.message || "Billing failed" 
+  });
+}
+
 };
 
 
@@ -196,8 +202,3 @@ exports.deleteTransaction = async (req, res) => {
   await Transaction.findByIdAndDelete(req.params.id);
   res.json({ message: "Deleted" });
 };
-
-
-
-
-

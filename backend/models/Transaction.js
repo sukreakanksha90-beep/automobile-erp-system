@@ -1,3 +1,4 @@
+
 const mongoose = require("mongoose");
 
 const ServiceSchema = new mongoose.Schema({
@@ -26,11 +27,12 @@ const TransactionSchema = new mongoose.Schema(
   {
     /* 🔗 LINK TO JOB CARD */
     jobCardId: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: "JobCard",
-      required: true,
-      unique: true // ONE job card → ONE bill
-    },
+  type: mongoose.Schema.Types.ObjectId,
+  ref: "JobCard",
+  default: null
+},
+
+
 
     invoiceNo: String,
     invoiceDate: Date,

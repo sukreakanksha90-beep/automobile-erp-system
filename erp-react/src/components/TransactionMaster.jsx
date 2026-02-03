@@ -1,8 +1,25 @@
+
+
 import { useEffect, useState } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 
 const JOBCARD_API = "http://localhost:5000/api/jobcards";
 const BILL_API = "http://localhost:5000/api/transactions/from-jobcard";
+const CUSTOMER_API = "http://localhost:5000/api/customers";
+const SERVICE_API = "http://localhost:5000/api/services";
+const PRODUCT_API = "http://localhost:5000/api/products";
+
+const getGST = (obj) => {
+  const raw =
+    obj.gst ??
+    obj.gstPercent ??
+    obj.tax ??
+    obj.gstCategory ??
+    0;
+
+  // handles "18%" → 18
+  return Number(String(raw).replace("%", "")) || 0;
+};
 
 
 export default function TransactionMaster() {
@@ -27,24 +44,34 @@ export default function TransactionMaster() {
   const [payment, setPayment] = useState({ cash: 0, upi: 0, credit: 0 });
   const [discount, setDiscount] = useState(0);
 
+  const [customersList, setCustomersList] = useState([]);
+const [serviceMasters, setServiceMasters] = useState([]);
+const [productMasters, setProductMasters] = useState([]);
+
+
   /* ================= FETCH DATA FROM JOBCARD ================= */
   useEffect(() => {
   if (!jobCardId) return;
 
-  fetch(`${JOBCARD_API}/${jobCardId}`)
+  fetch(`${JOBCARD_API}/${jobCardId}/billing`)
+
     .then(res => res.json())
     .then(jc => {
       console.log("JOB CARD DATA 👉", jc);
 
-      setInvoiceNo(`INV-${Date.now()}`);
+      fetch("http://localhost:5000/api/invoice/next")
+  .then(res => res.json())
+  .then(data => setInvoiceNo(data.invoiceNo));
+
 
       /* CUSTOMER */
       setCustomer({
-        customerName: jc.customerName || "",
-        vehicleNo: jc.vehicleNo || "",
-        contactNo: jc.contactNo || "",
-        state: jc.state || ""
-      });
+  customerName: jc.customerName || jc.name || "",
+  vehicleNo: jc.vehicleNo || "",
+  contactNo: jc.contactNo || jc.contact || "",
+  state: jc.state || ""
+});
+
 
       /* ✅ SERVICES — FIXED */
       const jobCardServices =
@@ -97,6 +124,59 @@ export default function TransactionMaster() {
     });
 }, [jobCardId]);
 
+  /* ================= FETCH MASTERS FOR MANUAL MODE ================= */
+  useEffect(() => {
+    if (jobCardId) return;
+
+    fetch(CUSTOMER_API).then(res => res.json()).then(setCustomersList);
+    fetch(SERVICE_API).then(res => res.json()).then(setServiceMasters);
+    fetch(PRODUCT_API).then(res => res.json()).then(setProductMasters);
+
+    fetch("http://localhost:5000/api/invoice/next")
+      .then(res => res.json())
+      .then(data => setInvoiceNo(data.invoiceNo));
+  }, [jobCardId]);
+
+  const addServiceFromMaster = (id) => {
+  const s = serviceMasters.find(x => (x._id || x.id) === id);
+  if (!s) return;
+
+  const rate = Number(s.cost || s.rate || s.price || 0);
+  const gst = getGST(s);
+
+  setServices([...services, {
+    name: s.name || s.serviceName || s.service,
+    qty: 1,
+    rate,
+    gst,
+    amount: rate
+  }]);
+};
+
+
+const addProductFromMaster = (id) => {
+  const p = productMasters.find(x => (x._id || x.pid) === id);
+  if (!p) return;
+
+  const rate = Number(p.sale || p.rate || p.price || 0);
+  const gst = getGST(p);
+
+  setProducts([...products, {
+    name: p.name || p.productName || p.product,
+    qty: 1,
+    rate,
+    gst,
+    amount: rate
+  }]);
+};
+
+const removeService = (index) => {
+  setServices(services.filter((_, i) => i !== index));
+};
+
+const removeProduct = (index) => {
+  setProducts(products.filter((_, i) => i !== index));
+};
 
   /* ================= CALCULATIONS ================= */
   const serviceTotal = services.reduce((a, s) => a + s.amount, 0);
@@ -111,29 +191,35 @@ export default function TransactionMaster() {
   const balance = grandTotal - totalPaid;
 
   /* ================= HANDLE BILL GENERATION ================= */
- const handleGenerateBill = async () => {
+
+  const handleGenerateBill = async () => {
   try {
-    const res = await fetch(`${BILL_API}/${jobCardId}`, {
+    const url = jobCardId
+      ? `${BILL_API}/${jobCardId}`   // from job card
+      : "http://localhost:5000/api/transactions"; // normal bill
+
+    const res = await fetch(url, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
         Authorization: `Bearer ${localStorage.getItem("token")}`
       },
       body: JSON.stringify({
-  invoiceNo,
-  services,
-  products,
-
-  subtotal: subTotal,
-  gstTotal,
-  discount,
-  grandTotal,
-
-  payments: payment,
-  totalPaid,
-  balance
-})
-
+        jobCardId,
+        invoiceNo,
+        invoiceDate,
+        customer,
+        services,
+        products,
+        subTotal: subTotal,
+        gstTotal,
+        discount,
+        grandTotal,
+        payment,
+        payments: payment,
+        totalPaid,
+        balance
+      })
     });
 
     if (!res.ok) {
@@ -149,6 +235,7 @@ export default function TransactionMaster() {
     alert("Server error while generating bill");
   }
 };
+
 
   return (
     <div className="tab">
@@ -178,6 +265,32 @@ export default function TransactionMaster() {
       {/* CUSTOMER */}
       <div className="section">
         <h4>Customer Details</h4>
+        {!jobCardId && (
+  <div className="field">
+    <label>Select Customer</label>
+    <select
+      onChange={e => {
+        const c = customersList.find(x => x._id === e.target.value);
+        if (!c) return;
+        setCustomer({
+  customerName: c.customerName || c.name || "",
+  vehicleNo: c.vehicleNo || "",
+  contactNo: c.contactNo || c.contact || "",
+  state: c.state || ""
+});
+
+      }}
+    >
+      <option value="">Select Customer</option>
+      {customersList.map(c => (
+        <option key={c._id} value={c._id}>
+          {c.customerName || c.name}
+        </option>
+      ))}
+    </select>
+  </div>
+)}
+
         <div className="grid-4">
           <div className="field">
             <label>Customer Name</label>
@@ -204,27 +317,56 @@ export default function TransactionMaster() {
       {/* SERVICES */}
       <div className="section">
         <h4>Service Details</h4>
+        {!jobCardId && (
+  <select onChange={e => addServiceFromMaster(e.target.value)}>
+    <option value="">Add Service</option>
+    {serviceMasters.map(s => (
+  <option key={s._id || s.id} value={s._id || s.id}>
+    {s.serviceName || s.name || s.service}
+  </option>
+))}
+
+  </select>
+)}
+
         <table className="service-table">
           <thead>
-            <tr>
-              <th>Service</th>
-              <th>Qty</th>
-              <th>Rate</th>
-              <th>GST %</th>
-              <th>Amount</th>
-            </tr>
-          </thead>
+  <tr>
+    <th>Service</th>
+    <th>Qty</th>
+    <th>Rate</th>
+    <th>GST %</th>
+    <th>Amount</th>
+    <th>Remove</th>
+  </tr>
+</thead>
+
           <tbody>
             {services.length > 0 ? (
               services.map((s, i) => (
-                <tr key={i}>
-                  <td>{s.name}</td>
-                  <td>{s.qty}</td>
-                  <td>{s.rate}</td>
-                  <td>{s.gst}</td>
-                  <td>{s.amount.toFixed(2)}</td>
-                </tr>
-              ))
+  <tr key={i}>
+    <td>{s.name}</td>
+    <td>{s.qty}</td>
+    <td>{s.rate}</td>
+    <td>{s.gst}</td>
+    <td>{s.amount.toFixed(2)}</td>
+    <td>
+      <button
+        onClick={() => removeService(i)}
+        style={{
+          background: "red",
+          color: "white",
+          border: "none",
+          cursor: "pointer",
+          padding: "4px 8px"
+        }}
+      >
+        ❌
+      </button>
+    </td>
+  </tr>
+))
+
             ) : (
               <tr>
                 <td colSpan="5" style={{ textAlign: "center" }}>
@@ -239,27 +381,56 @@ export default function TransactionMaster() {
       {/* PRODUCTS */}
       <div className="section">
         <h4>Product Details</h4>
+        {!jobCardId && (
+  <select onChange={e => addProductFromMaster(e.target.value)}>
+    <option value="">Add Product</option>
+    {productMasters.map(p => (
+  <option key={p._id || p.pid} value={p._id || p.pid}>
+    {p.productName || p.name || p.product}
+  </option>
+))}
+
+  </select>
+)}
+
         <table className="service-table">
           <thead>
-            <tr>
-              <th>Product</th>
-              <th>Qty</th>
-              <th>Rate</th>
-              <th>GST %</th>
-              <th>Amount</th>
-            </tr>
-          </thead>
+  <tr>
+    <th>Product</th>
+    <th>Qty</th>
+    <th>Rate</th>
+    <th>GST %</th>
+    <th>Amount</th>
+    <th>Remove</th>
+  </tr>
+</thead>
+
           <tbody>
             {products.length > 0 ? (
               products.map((p, i) => (
-                <tr key={i}>
-                  <td>{p.name}</td>
-                  <td>{p.qty}</td>
-                  <td>{p.rate}</td>
-                  <td>{p.gst}</td>
-                  <td>{p.amount.toFixed(2)}</td>
-                </tr>
-              ))
+  <tr key={i}>
+    <td>{p.name}</td>
+    <td>{p.qty}</td>
+    <td>{p.rate}</td>
+    <td>{p.gst}</td>
+    <td>{p.amount.toFixed(2)}</td>
+    <td>
+      <button
+        onClick={() => removeProduct(i)}
+        style={{
+          background: "red",
+          color: "white",
+          border: "none",
+          cursor: "pointer",
+          padding: "4px 8px"
+        }}
+      >
+        ❌
+      </button>
+    </td>
+  </tr>
+))
+
             ) : (
               <tr>
                 <td colSpan="5" style={{ textAlign: "center" }}>

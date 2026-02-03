@@ -104,13 +104,13 @@ const handleDelete = async (id) => {
     OPEN
   </button>
 
-  <button
+ {/* <button
     className="gene"
     style={{ marginLeft: "8px" }}
     onClick={() => navigate(`/transaction?edit=${bill._id}`)}
   >
     EDIT
-  </button>
+  </button> */}
 
   <button
     className="gene"
