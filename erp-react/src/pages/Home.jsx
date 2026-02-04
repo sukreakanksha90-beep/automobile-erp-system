@@ -7,8 +7,9 @@ import ProfileMenu from "../components/ProfileMenu";
 export default function Home() {
   const navigate = useNavigate();
 
-  const logout = () => {
-    localStorage.removeItem("loggedIn");
+   // 🔴 LOGOUT FUNCTION (NEW)
+  const handleLogout = () => {
+    localStorage.clear();
     navigate("/login");
   };
 
@@ -19,6 +20,7 @@ export default function Home() {
 
         <div className="home-left">
           <h1 className="home-title">Automobile ERP System</h1>
+            
 
           <p className="home-subtitle">
             Manage masters, transactions and operations with precision.
@@ -46,6 +48,21 @@ export default function Home() {
           </div>
         </div>
       </section>
+
+     <button
+          onClick={handleLogout}
+          style={{
+            background: "#d6201a",
+            color: "white",
+            padding: "10px 10px",
+            border: "#f8f7f7",
+            borderRadius: "4px",
+            cursor: "pointer",
+            
+          }}
+        >
+          Logout
+        </button>
 
       {/* ABOUT US SECTION (ON SCROLL) */}
       <section className="about-section">

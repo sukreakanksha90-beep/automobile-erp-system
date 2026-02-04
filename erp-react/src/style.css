@@ -468,12 +468,12 @@ hr {
 
 /* Logout */
 .logout-btn {
-  width: fit-content;
-  background: transparent;
-  color: #ccc;
-  border: none;
-  font-size: 14px;
+    padding: 16px 36px;
+  font-size: 18px;
+  border-radius: 30px;
   cursor: pointer;
+  border: none;
+  transition: all 0.3s ease;
 }
 
 .logout-btn:hover {
